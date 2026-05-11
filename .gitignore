@@ -1,0 +1,36 @@
+# Node modules
+node_modules/
+
+# Environment variables
+.env
+
+# Build folders
+dist/
+build/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# VS Code settings
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Python virtual environment
+venv/
+env/
+
+# Coverage
+coverage/
+
+# Temporary files
+tmp/
+temp/
