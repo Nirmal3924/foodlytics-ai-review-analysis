@@ -1,0 +1,98 @@
+@import "tailwindcss";
+@config "../tailwind.config.js";
+
+:root {
+  --app-scale: 0.9;
+}
+
+body {
+  zoom: var(--app-scale);
+  overflow-x: hidden;
+}
+
+/* ── Reset & base ─────────────────────────────────────── */
+/* *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --brand:      #E8401C;
+  --brand-dark: #C0300E;
+  --brand-light:#FFF5F3;
+  --bg:         #FAFAF8;
+  --surface:    #FFFFFF;
+  --border:     rgba(0, 0, 0, 0.08);
+  --text:       #1A1A1A;
+  --muted:      #666666;
+  --light:      #F5F5F2;
+  --success:    #22C55E;
+  --warning:    #F59E0B;
+  --danger:     #EF4444;
+  --radius-sm:  6px;
+  --radius-md:  10px;
+  --radius-lg:  14px;
+  --radius-xl:  20px;
+  --shadow-sm:  0 1px 4px rgba(0,0,0,0.06);
+  --shadow-md:  0 4px 16px rgba(0,0,0,0.10);
+  --shadow-lg:  0 12px 40px rgba(0,0,0,0.15);
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+} */
+
+/* ── Scrollbar ───────────────────────────────────────── */
+/* ::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; } */
+
+/* ── Utilities ───────────────────────────────────────── */
+/* .sr-only {
+  position: absolute; width: 1px; height: 1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap;
+}
+
+/* ── Animations ──────────────────────────────────────── */
+/* @keyframes fadeIn  { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+@keyframes spin    { to { transform: rotate(360deg); } }
+
+.fade-in  { animation: fadeIn  0.25s ease both; }
+.slide-up { animation: slideUp 0.3s  ease both; } */ 
+
+/* ── Form elements ───────────────────────────────────── */
+/* input, select, textarea {
+  font-family: inherit;
+  font-size: 14px;
+  border: 1.5px solid #ddd;
+  border-radius: var(--radius-md);
+  padding: 9px 13px;
+  width: 100%;
+  background: #fff;
+  color: var(--text);
+  transition: border-color 0.15s;
+  outline: none;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--brand); }
+
+label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: #444;
+  margin-bottom: 5px;
+}
+
+button { cursor: pointer; border: none; font-family: inherit; } */
+
+/* ── Spinner ─────────────────────────────────────────── */
+/* .spinner {
+  width: 20px; height: 20px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+} */
