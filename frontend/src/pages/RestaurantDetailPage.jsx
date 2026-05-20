@@ -151,7 +151,7 @@ export default function RestaurantDetailPage() {
                 </span>
               </div>
               <div className="flex flex-wrap gap-3 text-gray-500 text-sm">
-                <span className="flex items-center gap-1"><FiMapPin className="text-red-400"/> {r.location}</span>
+                <span className="flex items-center gap-1"><FiMapPin className="text-red-400"/> {[r.area, r.city].filter(Boolean).join(', ') || '—'}</span>
                 <span className="flex items-center gap-1"><FiTag className="text-blue-400"/> {r.cuisines}</span>
                 <span className={`flex items-center gap-1 font-semibold ${openNow ? 'text-emerald-600' : 'text-rose-600'}`}>
                   <FiClock className={openNow ? 'text-emerald-500' : 'text-rose-500'} />
@@ -428,7 +428,7 @@ export default function RestaurantDetailPage() {
                       <p className="font-bold text-gray-900 text-sm truncate">{item.name}</p>
                       <p className="text-xs text-gray-400 truncate">{item.cuisines}</p>
                       <p className="text-[10px] text-gray-400 truncate">
-                        {item.sameLocation ? 'Nearby' : item.location}
+                        {item.sameArea ? 'Nearby' : [item.area, item.city].filter(Boolean).join(', ')}
                         {item.sharedFoods?.length > 0 ? ` · ${item.sharedFoods.slice(0, 2).join(', ')}` : ''}
                       </p>
                     </div>
@@ -447,7 +447,7 @@ export default function RestaurantDetailPage() {
                   <h4 className="font-bold text-gray-900 mb-1 flex items-center gap-2">
                     <FiTarget className="text-orange-500" /> Match Score Graph
                   </h4>
-                  <p className="text-xs text-gray-400 mb-3">Same food/items and nearby location based ranking</p>
+                  <p className="text-xs text-gray-400 mb-3">Same food/items and same area based ranking</p>
                   <div className="space-y-2">
                     {similar.slice(0, 4).map(item => {
                       const pct = Math.round(((item.matchScore || 0) / maxMatchScore) * 100)
@@ -539,15 +539,15 @@ function getSimilarNearbyScore(base, item) {
   const baseFoods = getCuisineTokens(base.cuisines)
   const itemFoods = getCuisineTokens(item.cuisines)
   const sharedFoods = itemFoods.filter(food => baseFoods.includes(food))
-  const sameLocation = Boolean(base.location && item.location && base.location === item.location)
+  const sameArea = Boolean(base.area && item.area && base.area === item.area)
   const ratingBonus = Math.max(0, (item.avg_rating || 0) - 3) * 4
-  const matchScore = (sharedFoods.length * 35) + (sameLocation ? 25 : 0) + ratingBonus
+  const matchScore = (sharedFoods.length * 35) + (sameArea ? 25 : 0) + ratingBonus
 
   return {
     ...item,
     sharedFoods,
     sharedFoodCount: sharedFoods.length,
-    sameLocation,
+    sameArea,
     matchScore,
   }
 }

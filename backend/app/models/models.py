@@ -5,19 +5,8 @@ from app.database import Base
 import enum
 
 
-class UserRole(str, enum.Enum):
-    user = "user"
-    admin = "admin"
-
-
-class User(Base):
-    __tablename__ = "users"
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(100), nullable=False)
-    email = Column(String(150), unique=True, index=True, nullable=False)
-    hashed_password = Column(String(255), nullable=False)
-    role = Column(Enum(UserRole), default=UserRole.user, nullable=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
+from app.models.user_model import User, UserRole
+from app.models.otp_model import OTPVerification
 
 
 class Restaurant(Base):
@@ -29,7 +18,8 @@ class Restaurant(Base):
     collections = Column(Text)
     cuisines = Column(String(300))
     timings = Column(String(300))
-    location = Column(String(100))
+    city = Column(String(100))
+    area = Column(String(100))
     avg_rating = Column(Float, default=0.0)
     review_count = Column(Integer, default=0)
     category = Column(String(50))

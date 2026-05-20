@@ -310,7 +310,7 @@ export default function AdminOverview({ lightMode = true, onViewAll }) {
     if (!q) return topRestaurants
 
     return topRestaurants.filter((restaurant) =>
-      [restaurant.name, restaurant.category, restaurant.location]
+      [restaurant.name, restaurant.category, restaurant.area, restaurant.city]
         .filter(Boolean)
         .some((value) => value.toLowerCase().includes(q))
     )
@@ -332,13 +332,14 @@ export default function AdminOverview({ lightMode = true, onViewAll }) {
       ['Average Rating', Number(stats.avg_rating ?? 0).toFixed(2)],
       ['Top Rated Restaurants', stats.top_rated_count ?? 0],
       [],
-      ['Rank', 'Restaurant Name', 'Rating', 'Category', 'Location', 'Cost for Two'],
+      ['Rank', 'Restaurant Name', 'Rating', 'Category', 'City', 'Area', 'Cost for Two'],
       ...topRestaurants.map((restaurant, index) => [
         index + 1,
         restaurant.name,
         Number(restaurant.avg_rating ?? 0).toFixed(1),
         restaurant.category || 'Uncategorized',
-        restaurant.location || '',
+        restaurant.city || '',
+        restaurant.area || '',
         restaurant.cost ?? '',
       ]),
     ]
@@ -530,7 +531,7 @@ export default function AdminOverview({ lightMode = true, onViewAll }) {
           <table className="w-full min-w-[860px] border-collapse text-left text-[11px]">
             <thead>
               <tr className={`text-[10px] font-bold ${tableHeadClass}`}>
-                {['#', 'Restaurant Name', 'Rating', 'Category', 'Location', 'Cost for Two', ''].map((header) => (
+                {['#', 'Restaurant Name', 'Rating', 'Category', 'City', 'Area', 'Cost for Two', ''].map((header) => (
                   <th key={header || 'actions'} className="px-4 py-2.5">
                     {header}
                   </th>
@@ -556,7 +557,8 @@ export default function AdminOverview({ lightMode = true, onViewAll }) {
                         {restaurant.category || 'Uncategorized'}
                       </span>
                     </td>
-                    <td className={`px-4 py-2 font-medium ${mutedClass}`}>{restaurant.location || '-'}</td>
+                    <td className={`px-4 py-2 font-medium ${mutedClass}`}>{restaurant.city || '—'}</td>
+                    <td className={`px-4 py-2 font-medium ${mutedClass}`}>{restaurant.area || '—'}</td>
                     <td className={`px-4 py-2 font-medium ${mutedClass}`}>
                       {INR}{Number(restaurant.cost ?? 0).toLocaleString()}
                     </td>

@@ -4,40 +4,8 @@ from datetime import datetime
 from enum import Enum
 
 
-class UserRole(str, Enum):
-    user = "user"
-    admin = "admin"
-
-
-# ── AUTH ──────────────────────────────────────────────────
-class UserCreate(BaseModel):
-    name: str
-    email: EmailStr
-    password: str
-    role: UserRole = UserRole.user
-
-
-class UserLogin(BaseModel):
-    email: EmailStr
-    password: str
-    role: UserRole = UserRole.user
-
-
-class UserOut(BaseModel):
-    id: int
-    name: str
-    email: str
-    role: UserRole
-    created_at: datetime
-
-    class Config:
-        from_attributes = True
-
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-    user: UserOut
+from app.schemas.user_schema import UserRole, UserCreate, UserLogin, UserOut, Token
+from app.schemas.otp_schema import ResetPasswordRequest as PasswordReset
 
 
 # ── REVIEWS ───────────────────────────────────────────────
@@ -59,11 +27,14 @@ class RestaurantBase(BaseModel):
     cost: Optional[int] = 0
     cuisines: Optional[str] = ""
     timings: Optional[str] = ""
-    location: Optional[str] = ""
+    city: Optional[str] = ""
+    area: Optional[str] = ""
 
 
 class RestaurantCreate(RestaurantBase):
     collections: Optional[str] = ""
+    avg_rating: Optional[float] = 0.0
+    category: Optional[str] = None
 
 
 class RestaurantUpdate(BaseModel):
@@ -72,15 +43,16 @@ class RestaurantUpdate(BaseModel):
     cost: Optional[int]
     cuisines: Optional[str]
     timings: Optional[str]
-    location: Optional[str]
+    city: Optional[str]
+    area: Optional[str]
     category: Optional[str]
     avg_rating: Optional[float]
 
 
 class RestaurantOut(RestaurantBase):
     id: int
-    avg_rating: float
-    review_count: int
+    avg_rating: float = 0.0
+    review_count: int = 0
     category: Optional[str]
     sentiment_score: Optional[float]
     cluster_id: Optional[int]
@@ -118,3 +90,40 @@ class AdminStats(BaseModel):
     category_breakdown: dict
     data_start_date: Optional[datetime] = None
     data_end_date: Optional[datetime] = None
+
+
+# ── AI RECOMMENDATIONS ────────────────────────────────────
+class AIRecommendRequest(BaseModel):
+    mood: Optional[str] = "Casual Hangout"
+    cuisine: Optional[str] = "Any"
+    budget: Optional[str] = "mid"
+    city: Optional[str] = "Hyderabad"
+    notes: Optional[str] = ""
+
+
+class AIRestaurantPick(BaseModel):
+    restaurant: RestaurantOut
+    match_score: int
+    reason: str
+
+
+class AIChatRequest(BaseModel):
+    query: str
+    city: str
+
+
+class AIFilters(BaseModel):
+    mood: Optional[str] = None
+    cuisine: Optional[str] = None
+    budget: Optional[str] = None
+    ambience: Optional[str] = None
+    occasion: Optional[str] = None
+    dining_type: Optional[str] = None
+    timing: Optional[str] = None
+
+
+class AIChatResponse(BaseModel):
+    filters: AIFilters
+    message: str
+    restaurants: List[AIRestaurantPick]
+

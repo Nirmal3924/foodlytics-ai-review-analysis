@@ -8,22 +8,21 @@ from sqlalchemy.orm import Session
 from app.models.models import Restaurant, Review
 
 
-AREAS = [
-    "Gachibowli", "Banjara Hills", "Jubilee Hills", "Hitech City",
-    "Madhapur", "Kondapur", "Kukatpally", "Begumpet", "Ameerpet", "Secunderabad",
-]
-
-
 def _parse_cost(cost_str: str) -> int:
     try:
-        return int(cost_str.replace(",", "").strip())
+        return int(str(cost_str).replace(",", "").strip())
     except (ValueError, AttributeError):
         return 0
 
 
-def _derive_location(name: str, link: str) -> str:
-    # Heuristic: hash name into an area bucket (deterministic)
-    return AREAS[hash(name) % len(AREAS)]
+def _row_lookup(row: dict, *keys: str) -> str:
+    """Read a CSV column case-insensitively."""
+    lower = {k.lower().strip() if k else "": (v or "").strip() for k, v in row.items()}
+    for key in keys:
+        val = lower.get(key.lower(), "")
+        if val:
+            return val
+    return ""
 
 
 def _derive_category(avg_rating: float) -> str:
@@ -33,37 +32,39 @@ def _derive_category(avg_rating: float) -> str:
         return "Popular"
     elif avg_rating >= 3.5:
         return "Hidden Gem"
-    else:
-        return "Overrated"
+    return "Overrated"
 
 
 def ingest_restaurant_csv(file: StringIO, db: Session) -> tuple[int, int]:
     """
     Parse Zomato_Restaurant_names_and_Metadata.csv
-    Columns: Name, Links, Cost, Collections, Cuisines, Timings
+    Columns: Name, Links, Cost, Collections, Cuisines, Timings, City, Area
     """
     reader = csv.DictReader(file)
     inserted = 0
     skipped = 0
 
     for row in reader:
-        name = row.get("Name", "").strip()
+        name = _row_lookup(row, "name")
         if not name:
             skipped += 1
             continue
-        exists = db.query(Restaurant).filter(Restaurant.name == name).first()
-        if exists:
+        if db.query(Restaurant).filter(Restaurant.name == name).first():
             skipped += 1
             continue
 
+        city = _row_lookup(row, "city")
+        area = _row_lookup(row, "area")
+
         restaurant = Restaurant(
             name=name,
-            link=row.get("Links", "").strip(),
-            cost=_parse_cost(row.get("Cost", "0")),
-            collections=row.get("Collections", "").strip(),
-            cuisines=row.get("Cuisines", "").strip(),
-            timings=row.get("Timings", "").strip(),
-            location=_derive_location(name, row.get("Links", "")),
+            link=_row_lookup(row, "links", "link"),
+            cost=_parse_cost(row.get("Cost") or row.get("cost") or "0"),
+            collections=_row_lookup(row, "collections"),
+            cuisines=_row_lookup(row, "cuisines"),
+            timings=_row_lookup(row, "timings"),
+            city=city,
+            area=area,
             avg_rating=0.0,
             review_count=0,
             category="Uncategorized",
@@ -79,7 +80,6 @@ def ingest_reviews_csv(file: StringIO, db: Session) -> tuple[int, int]:
     """
     Parse Zomato_Restaurant_reviews.csv
     Columns: Restaurant, Reviewer, Review, Rating, Metadata, Time, Pictures
-    After ingestion, recalculate avg_rating and category per restaurant.
     """
     reader = csv.DictReader(file)
     inserted = 0
@@ -87,7 +87,7 @@ def ingest_reviews_csv(file: StringIO, db: Session) -> tuple[int, int]:
     updated_restaurants: set = set()
 
     for row in reader:
-        restaurant_name = row.get("Restaurant", "").strip()
+        restaurant_name = _row_lookup(row, "restaurant")
         if not restaurant_name:
             skipped += 1
             continue
@@ -97,20 +97,20 @@ def ingest_reviews_csv(file: StringIO, db: Session) -> tuple[int, int]:
             skipped += 1
             continue
 
-        rating_str = row.get("Rating", "").strip()
+        rating_str = _row_lookup(row, "rating")
         try:
-            rating = int(rating_str)
+            rating = int(rating_str) if rating_str else None
         except ValueError:
             rating = None
 
         review = Review(
             restaurant_id=restaurant.id,
-            reviewer=row.get("Reviewer", "").strip(),
-            review_text=row.get("Review", "").strip(),
+            reviewer=_row_lookup(row, "reviewer"),
+            review_text=_row_lookup(row, "review"),
             rating=rating,
-            metadata_info=row.get("Metadata", "").strip(),
-            review_time=row.get("Time", "").strip(),
-            pictures=int(row.get("Pictures", "0") or "0"),
+            metadata_info=_row_lookup(row, "metadata"),
+            review_time=_row_lookup(row, "time"),
+            pictures=int(_row_lookup(row, "pictures") or "0"),
         )
         db.add(review)
         inserted += 1
@@ -118,7 +118,6 @@ def ingest_reviews_csv(file: StringIO, db: Session) -> tuple[int, int]:
 
     db.commit()
 
-    # Recalculate avg_rating and category for affected restaurants
     for rid in updated_restaurants:
         _recalculate_restaurant_stats(rid, db)
 

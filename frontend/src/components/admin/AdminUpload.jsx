@@ -256,7 +256,7 @@ export default function AdminUpload() {
                   lightMode ? 'bg-[#fafaf8] text-gray-800' : 'bg-[#07111f] text-[#dce5f4]'
                 }`}
               >
-                Name, Links, Cost, Collections, Cuisines, Timings
+                Name, Links, Cost, Collections, Cuisines, Timings, City, Area
               </code>
             </div>
           </div>
@@ -269,7 +269,7 @@ export default function AdminUpload() {
                 </span>
                 Total Columns
               </span>
-              <span className={lightMode ? 'text-[#0d1d36]' : 'text-white/90'}>{6}</span>
+              <span className={lightMode ? 'text-[#0d1d36]' : 'text-white/90'}>{8}</span>
             </div>
 
             <div className={`flex items-center justify-between text-[12px] font-semibold ${lightMode ? 'text-[#52607a]' : 'text-[#9cadc5]'}`}>

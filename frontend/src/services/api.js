@@ -1,4 +1,4 @@
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+const BASE_URL = import.meta.env.VITE_API_URL || '/api'
 
 class ApiService {
   #token = null
@@ -26,10 +26,21 @@ class ApiService {
     }
     if (body) opts.body = isFormData ? body : JSON.stringify(body)
 
-    const res = await fetch(`${BASE_URL}${path}`, opts)
+    let res
+    try {
+      res = await fetch(`${BASE_URL}${path}`, opts)
+    } catch {
+      throw new Error(
+        'Cannot reach the API server. Start the backend (uvicorn) and ensure VITE_API_URL points to it.'
+      )
+    }
     if (!res.ok) {
       const err = await res.json().catch(() => ({ detail: res.statusText }))
-      throw new Error(err.detail || 'Request failed')
+      const detail = err.detail
+      const msg = Array.isArray(detail)
+        ? detail.map((d) => d.msg || JSON.stringify(d)).join('; ')
+        : detail || res.statusText || 'Request failed'
+      throw new Error(msg)
     }
     return res.json()
   }
@@ -51,13 +62,22 @@ export const restaurantService = {
   getTop:       ()            => api.get('/restaurants/top'),
   getHiddenGems:()            => api.get('/restaurants/hidden-gems'),
   getOverrated: ()            => api.get('/restaurants/overrated'),
-  getLocations: ()            => api.get('/restaurants/locations'),
+  getAreas:   () => api.get('/restaurants/areas'),
+  getCities:  () => api.get('/restaurants/cities'),
+  aiRecommend:(data) => api.post('/restaurants/ai-recommend', data),
+  aiChat:     (data) => api.post('/restaurants/ai-chat', data),
 }
 
 // ── Admin helpers ─────────────────────────────────────────────────────────────
 export const adminService = {
   getStats:           ()           => api.get('/admin/stats'),
-  getRestaurants:     (page = 1)   => api.get(`/admin/restaurants?page=${page}&per_page=10`),
+  getRestaurants: (page = 1, search = '', sortBy = 'avg_rating', sortOrder = 'desc') => {
+    const params = new URLSearchParams({ page, per_page: 10 })
+    if (search) params.append('search', search)
+    if (sortBy) params.append('sort_by', sortBy)
+    if (sortOrder) params.append('sort_order', sortOrder)
+    return api.get(`/admin/restaurants?${params.toString()}`)
+  },
   createRestaurant:   (data)       => api.post('/admin/restaurants', data),
   updateRestaurant:   (id, data)   => api.put(`/admin/restaurants/${id}`, data),
   deleteRestaurant:   (id)         => api.delete(`/admin/restaurants/${id}`),

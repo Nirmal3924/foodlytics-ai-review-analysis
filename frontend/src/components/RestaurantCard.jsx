@@ -56,7 +56,9 @@ export default function RestaurantCard({ restaurant: r, onClick }) {
         </h3>
         <p className="mb-[6px] flex items-center gap-[4px] overflow-hidden text-ellipsis whitespace-nowrap text-[12px] text-[#888]">
           <FaLocationDot className="shrink-0 text-red-500" aria-hidden="true" />
-          <span className="overflow-hidden text-ellipsis whitespace-nowrap">{r.location}</span>
+          <span className="overflow-hidden text-ellipsis whitespace-nowrap">
+            {[r.area, r.city].filter(Boolean).join(', ') || '—'}
+          </span>
         </p>
         <p className="mb-[10px] overflow-hidden text-ellipsis whitespace-nowrap text-[12px] text-[#888]">
           {r.cuisines}

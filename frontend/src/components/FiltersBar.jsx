@@ -1,9 +1,9 @@
 const CATEGORIES = ['Top Restaurant', 'Popular', 'Hidden Gem', 'Overrated']
 
 export default function FiltersBar({
-  locations,
-  location,
-  onLocation,
+  areas,
+  area,
+  onArea,
   rating,
   onRating,
   category,
@@ -22,11 +22,11 @@ export default function FiltersBar({
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(140px,1fr)_minmax(130px,1fr)_minmax(150px,1fr)_minmax(170px,1fr)_auto_auto_auto] lg:items-center">
         <select
           className={selectClass}
-          value={location}
-          onChange={e => onLocation(e.target.value)}
+          value={area}
+          onChange={e => onArea(e.target.value)}
         >
-          <option value="">All Locations</option>
-          {locations.map(l => <option key={l} value={l}>{l}</option>)}
+          <option value="">All Areas</option>
+          {areas.map(a => <option key={a} value={a}>{a}</option>)}
         </select>
 
         <select

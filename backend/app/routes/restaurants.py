@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
-from typing import Optional
+from typing import Optional, List
 from app.database import get_db
 from app.models.models import Restaurant, Review
-from app.schemas.schemas import RestaurantOut, RestaurantList
+from app.schemas.schemas import RestaurantOut, RestaurantList, AIRecommendRequest, AIRestaurantPick, AIChatRequest, AIChatResponse
 from app.services.auth_service import get_current_user
+from app.services.ai_service import get_ai_recommendations, process_ai_chat
 from app.models.models import User
 from app.utils import is_open_now
 
@@ -15,7 +16,8 @@ router = APIRouter()
 @router.get("/", response_model=RestaurantList)
 def get_restaurants(
     search: Optional[str] = Query(None),
-    location: Optional[str] = Query(None),
+    area: Optional[str] = Query(None),
+    city: Optional[str] = Query(None),
     category: Optional[str] = Query(None),
     min_rating: Optional[float] = Query(None),
     max_cost: Optional[int] = Query(None),
@@ -35,11 +37,14 @@ def get_restaurants(
             or_(
                 Restaurant.name.ilike(f"%{search}%"),
                 Restaurant.cuisines.ilike(f"%{search}%"),
-                Restaurant.location.ilike(f"%{search}%")
+                Restaurant.area.ilike(f"%{search}%"),
+                Restaurant.city.ilike(f"%{search}%"),
             )
         )
-    if location:
-        query = query.filter(Restaurant.location == location)
+    if area:
+        query = query.filter(Restaurant.area == area)
+    if city:
+        query = query.filter(Restaurant.city == city)
     if category:
         query = query.filter(Restaurant.category == category)
     if min_rating is not None:
@@ -117,9 +122,15 @@ def get_overrated(limit: int = Query(8, le=20), db: Session = Depends(get_db)):
     )
 
 
-@router.get("/locations", response_model=list[str])
-def get_locations(db: Session = Depends(get_db)):
-    rows = db.query(Restaurant.location).distinct().filter(Restaurant.location.isnot(None)).all()
+@router.get("/areas", response_model=list[str])
+def get_areas(db: Session = Depends(get_db)):
+    rows = db.query(Restaurant.area).distinct().filter(Restaurant.area.isnot(None)).all()
+    return sorted([r[0] for r in rows if r[0]])
+
+
+@router.get("/cities", response_model=list[str])
+def get_cities(db: Session = Depends(get_db)):
+    rows = db.query(Restaurant.city).distinct().filter(Restaurant.city.isnot(None)).all()
     return sorted([r[0] for r in rows if r[0]])
 
 
@@ -161,3 +172,20 @@ def get_reviews(
         .all()
     )
     return {"reviews": reviews, "total": total, "page": page, "per_page": per_page}
+
+
+@router.post("/ai-recommend", response_model=List[AIRestaurantPick])
+def ai_recommend(req: AIRecommendRequest, db: Session = Depends(get_db)):
+    try:
+        return get_ai_recommendations(req, db)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/ai-chat", response_model=AIChatResponse)
+def ai_chat(req: AIChatRequest, db: Session = Depends(get_db)):
+    try:
+        return process_ai_chat(req, db)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+

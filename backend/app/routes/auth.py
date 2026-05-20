@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.models import User
-from app.schemas.schemas import UserCreate, UserLogin, Token, UserOut
+from app.schemas.schemas import UserCreate, UserLogin, Token, UserOut, PasswordReset
 from app.services.auth_service import hash_password, verify_password, create_access_token
 
 router = APIRouter()
@@ -22,7 +22,7 @@ def signup(data: UserCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(user)
     token = create_access_token({"sub": str(user.id), "role": user.role})
-    return Token(access_token=token, token_type="bearer", user=UserOut.from_orm(user))
+    return Token(access_token=token, token_type="bearer", user=UserOut.model_validate(user))
 
 
 @router.post("/login", response_model=Token)
@@ -31,10 +31,22 @@ def login(data: UserLogin, db: Session = Depends(get_db)):
     if not user or not verify_password(data.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     token = create_access_token({"sub": str(user.id), "role": user.role})
-    return Token(access_token=token, token_type="bearer", user=UserOut.from_orm(user))
+    return Token(access_token=token, token_type="bearer", user=UserOut.model_validate(user))
 
 
 @router.get("/me", response_model=UserOut)
 def get_me(db: Session = Depends(get_db)):
     # Returns current user info - use with auth middleware in real deployment
     raise HTTPException(status_code=401, detail="Token required")
+
+
+@router.post("/reset-password")
+def reset_password(data: PasswordReset, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == data.email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Email address not found")
+    
+    user.hashed_password = hash_password(data.new_password)
+    db.commit()
+    return {"message": "Password updated successfully"}
+

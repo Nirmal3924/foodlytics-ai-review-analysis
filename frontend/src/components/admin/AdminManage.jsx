@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { FiSearch, FiChevronUp, FiChevronDown, FiFilter, FiX } from 'react-icons/fi'
 import { adminService } from '../../services/api'
 
 const CAT_COLOR = { 
@@ -14,7 +15,19 @@ const CAT_BG = {
   'Overrated': 'bg-[#fce4ec]' 
 }
 const CATEGORIES = ['Top Restaurant', 'Popular', 'Hidden Gem', 'Overrated']
-const LOCATIONS = ['Gachibowli', 'Banjara Hills', 'Jubilee Hills', 'Hitech City', 'Madhapur', 'Kondapur', 'Kukatpally', 'Begumpet', 'Ameerpet', 'Secunderabad']
+const AREAS = ['Gachibowli', 'Banjara Hills', 'Jubilee Hills', 'Hitech City', 'Madhapur', 'Kondapur', 'Kukatpally', 'Begumpet', 'Ameerpet', 'Secunderabad']
+const CITIES = ['Hyderabad']
+
+const COL_MAPPING = [
+  { label: 'Name', key: 'name', sortable: true },
+  { label: 'Rating', key: 'avg_rating', sortable: true },
+  { label: 'Category', key: 'category', sortable: true },
+  { label: 'City', key: 'city', sortable: true },
+  { label: 'Area', key: 'area', sortable: true },
+  { label: 'Cost (₹)', key: 'cost', sortable: true },
+  { label: 'Cuisines', key: 'cuisines', sortable: false },
+  { label: 'Actions', key: 'actions', sortable: false },
+]
 
 export default function AdminManage() {
   const lightMode = localStorage.getItem('zl_theme') !== 'dark'
@@ -25,21 +38,37 @@ export default function AdminManage() {
   const [editTarget, setEditTarget] = useState(null)
   const [addMode, setAddMode] = useState(false)
   const [toast, setToast] = useState('')
+  const [loadError, setLoadError] = useState('')
   const [form, setForm] = useState({})
+  
+  const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [sortBy, setSortBy] = useState('avg_rating')
+  const [sortOrder, setSortOrder] = useState('desc')
   const PER_PAGE = 10
 
-  const load = async (p = page) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search)
+      setPage(1)
+    }, 350)
+    return () => clearTimeout(timer)
+  }, [search])
+
+  const load = async (p = page, s = debouncedSearch, sb = sortBy, so = sortOrder) => {
     setLoading(true)
+    setLoadError('')
     try {
-      const res = await adminService.getRestaurants(p)
+      const res = await adminService.getRestaurants(p, s, sb, so)
       setRestaurants(res)
     } catch (err) {
-      console.error(err)
+      setLoadError(err.message || 'Failed to load restaurants')
+      setRestaurants([])
     }
     setLoading(false)
   }
 
-  useEffect(() => { load() }, [page])
+  useEffect(() => { load() }, [page, debouncedSearch, sortBy, sortOrder])
 
   const showToast = msg => { setToast(msg); setTimeout(() => setToast(''), 2800) }
 
@@ -50,7 +79,7 @@ export default function AdminManage() {
   }
 
   const openAdd = () => {
-    setForm({ name: '', avg_rating: '', cost: '', location: LOCATIONS[0], category: CATEGORIES[0], cuisines: '' })
+    setForm({ name: '', avg_rating: '', cost: '', city: CITIES[0], area: AREAS[0], category: CATEGORIES[0], cuisines: '' })
     setAddMode(true)
     setEditTarget(null)
   }
@@ -58,12 +87,17 @@ export default function AdminManage() {
   const closeModal = () => { setEditTarget(null); setAddMode(false) }
 
   const handleSave = async () => {
+    const payload = {
+      ...form,
+      avg_rating: form.avg_rating === '' || form.avg_rating == null ? 0 : Number(form.avg_rating),
+      cost: form.cost === '' || form.cost == null ? 0 : Number(form.cost),
+    }
     try {
       if (addMode) {
-        await adminService.createRestaurant(form)
+        await adminService.createRestaurant(payload)
         showToast('✓ Restaurant added to database')
       } else {
-        await adminService.updateRestaurant(editTarget.id, form)
+        await adminService.updateRestaurant(editTarget.id, payload)
         showToast('✓ Restaurant updated')
       }
       closeModal()
@@ -105,6 +139,87 @@ export default function AdminManage() {
         </button>
       </div>
 
+      {/* Controls Bar: Search & Sorting */}
+      <div className={`mb-6 p-4 rounded-xl border flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm ${
+        lightMode ? 'bg-white border-black/10' : 'bg-[#0d1b2e] border-[#223650]'
+      }`}>
+        {/* Search Input */}
+        <div className="relative w-full md:w-80">
+          <FiSearch className={`absolute left-3.5 top-1/2 -translate-y-1/2 text-lg ${lightMode ? 'text-gray-400' : 'text-[#6e84a3]'}`} />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search name, cuisine, city, area..."
+            className={`w-full pl-10 pr-10 py-2.5 rounded-lg text-sm font-medium outline-none transition-all ${
+              lightMode 
+                ? 'bg-[#fafaf8] border border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-[#E8401C] focus:bg-white focus:ring-4 focus:ring-[#E8401C]/10' 
+                : 'bg-[#07111f] border border-[#223650] text-white placeholder:text-[#6e84a3] focus:border-[#E8401C] focus:ring-4 focus:ring-[#E8401C]/15'
+            }`}
+          />
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              className={`absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md transition-opacity hover:opacity-80 ${
+                lightMode ? 'text-gray-400 hover:text-gray-700' : 'text-[#6e84a3] hover:text-white'
+              }`}
+              title="Clear search"
+            >
+              <FiX size={16} />
+            </button>
+          )}
+        </div>
+
+        {/* Sorting Dropdowns */}
+        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+          <div className="flex items-center gap-2 text-xs font-semibold">
+            <FiFilter className={lightMode ? 'text-gray-400' : 'text-[#6e84a3]'} size={15} />
+            <span className={lightMode ? 'text-gray-500' : 'text-[#9cadc5]'}>Sort by:</span>
+          </div>
+
+          <select
+            value={sortBy}
+            onChange={(e) => { setSortBy(e.target.value); setPage(1); }}
+            className={`py-2 px-3 rounded-lg text-xs font-semibold outline-none border cursor-pointer transition-colors ${
+              lightMode
+                ? 'bg-[#fafaf8] border-gray-200 text-gray-800 hover:border-gray-300 focus:border-[#E8401C]'
+                : 'bg-[#07111f] border-[#223650] text-[#d9e5f5] hover:border-[#31506f] focus:border-[#E8401C]'
+            }`}
+          >
+            <option value="avg_rating">Rating</option>
+            <option value="name">Name</option>
+            <option value="cost">Cost</option>
+            <option value="category">Category</option>
+            <option value="area">Area</option>
+            <option value="city">City</option>
+            <option value="id">Date Added</option>
+          </select>
+
+          <select
+            value={sortOrder}
+            onChange={(e) => { setSortOrder(e.target.value); setPage(1); }}
+            className={`py-2 px-3 rounded-lg text-xs font-semibold outline-none border cursor-pointer transition-colors ${
+              lightMode
+                ? 'bg-[#fafaf8] border-gray-200 text-gray-800 hover:border-gray-300 focus:border-[#E8401C]'
+                : 'bg-[#07111f] border-[#223650] text-[#d9e5f5] hover:border-[#31506f] focus:border-[#E8401C]'
+            }`}
+          >
+            <option value="desc">{sortBy === 'name' ? 'Z to A' : sortBy === 'cost' ? 'High to Low' : sortBy === 'id' ? 'Newest First' : 'Highest First'}</option>
+            <option value="asc">{sortBy === 'name' ? 'A to Z' : sortBy === 'cost' ? 'Low to High' : sortBy === 'id' ? 'Oldest First' : 'Lowest First'}</option>
+          </select>
+        </div>
+      </div>
+
+      {loadError && (
+        <div
+          className={`mb-4 rounded-xl border px-4 py-3 text-sm font-medium ${
+            lightMode ? 'border-red-200 bg-red-50 text-red-700' : 'border-red-900/40 bg-red-950/30 text-red-300'
+          }`}
+        >
+          {loadError}
+        </div>
+      )}
+
       {loading ? (
         <div className={`flex items-center justify-center h-40 text-sm ${lightMode ? 'text-gray-400' : 'text-[#9cadc5]'}`}>Loading…</div>
       ) : (
@@ -113,61 +228,113 @@ export default function AdminManage() {
             <table className="w-full border-collapse text-[13px] text-left">
               <thead>
                 <tr className={tableHead}>
-                  {['Name', 'Rating', 'Category', 'Location', 'Cost (₹)', 'Cuisines', 'Actions'].map(h => (
-                    <th
-                      key={h}
-                      className={`px-[14px] py-[11px] text-[11px] font-semibold uppercase tracking-wider border-b ${
-                        lightMode ? 'text-gray-400 border-black/5' : 'text-[#9cadc5] border-[#223650]'
-                      }`}
-                    >
-                      {h}
-                    </th>
-                  ))}
+                  {COL_MAPPING.map(col => {
+                    const isActive = sortBy === col.key
+                    return (
+                      <th
+                        key={col.label}
+                        onClick={() => {
+                          if (!col.sortable) return
+                          if (isActive) {
+                            setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')
+                          } else {
+                            setSortBy(col.key)
+                            setSortOrder('desc')
+                          }
+                          setPage(1)
+                        }}
+                        className={`px-[14px] py-[11px] text-[11px] font-semibold uppercase tracking-wider border-b select-none ${
+                          col.sortable ? 'cursor-pointer hover:text-[#E8401C] transition-colors' : ''
+                        } ${
+                          lightMode 
+                            ? (isActive ? 'text-[#E8401C] border-black/5 font-bold' : 'text-gray-400 border-black/5') 
+                            : (isActive ? 'text-[#E8401C] border-[#223650] font-bold' : 'text-[#9cadc5] border-[#223650]')
+                        }`}
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <span>{col.label}</span>
+                          {col.sortable && isActive && (
+                            sortOrder === 'asc' ? <FiChevronUp size={14} className="text-[#E8401C]" /> : <FiChevronDown size={14} className="text-[#E8401C]" />
+                          )}
+                        </div>
+                      </th>
+                    )
+                  })}
                 </tr>
               </thead>
               <tbody className={lightMode ? 'divide-y divide-black/5' : 'divide-y divide-[#223650]'}>
-                {restaurants.map(r => (
-                  <tr key={r.id} className={`${rowHover} transition-colors`}>
-                    <td className={`px-[14px] py-[11px] font-medium max-w-[180px] truncate ${lightMode ? 'text-gray-900' : 'text-white/90'}`}>
-                      {r.name}
-                    </td>
-                    <td className="px-[14px] py-[11px]">
-                      <span className={`font-bold ${r.avg_rating >= 4.5 ? 'text-green-500' : r.avg_rating >= 4 ? 'text-amber-500' : 'text-red-500'}`}>
-                        ★ {r.avg_rating?.toFixed(1)}
-                      </span>
-                    </td>
-                    <td className="px-[14px] py-[11px]">
-                      <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold whitespace-nowrap ${CAT_BG[r.category]} ${CAT_COLOR[r.category]}`}>
-                        {r.category}
-                      </span>
-                    </td>
-                    <td className={`px-[14px] py-[11px] ${mutedText2}`}>{r.location}</td>
-                    <td className={`px-[14px] py-[11px] ${mutedText2}`}>{r.cost?.toLocaleString()}</td>
-                    <td className={`px-[14px] py-[11px] ${lightMode ? 'text-gray-400' : 'text-[#9cadc5]'} max-w-[160px] truncate`}>{r.cuisines}</td>
-                    <td className="px-[14px] py-[11px] whitespace-nowrap space-x-2">
-                      <button 
-                        onClick={() => openEdit(r)}
-                        className={`px-2.5 py-1 rounded-md text-xs font-medium hover:opacity-80 transition-opacity ${
-                          lightMode
-                            ? 'bg-blue-50 text-blue-700 border-blue-200'
-                            : 'bg-[#0b2140] text-[#93c5fd] border-blue-900/40'
-                        }`}
-                      >
-                        Edit
-                      </button>
-                      <button 
-                        onClick={() => handleDelete(r)}
-                        className={`px-2.5 py-1 rounded-md text-xs font-medium hover:opacity-80 transition-opacity ${
-                          lightMode
-                            ? 'bg-red-50 text-red-600 border-red-200'
-                            : 'bg-[#3b0b0b] text-[#fca5a5] border-red-900/40'
-                        }`}
-                      >
-                        Delete
-                      </button>
+                {restaurants.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="py-16 text-center">
+                      <div className="flex flex-col items-center justify-center space-y-3">
+                        <div className={`p-4 rounded-full ${lightMode ? 'bg-gray-100 text-gray-400' : 'bg-[#12233a] text-[#6e84a3]'}`}>
+                          <FiSearch size={28} />
+                        </div>
+                        <h3 className={`text-base font-semibold ${lightMode ? 'text-gray-800' : 'text-white'}`}>No matching restaurants found</h3>
+                        <p className={`text-xs max-w-sm ${lightMode ? 'text-gray-500' : 'text-[#9cadc5]'}`}>
+                          We couldn't find any restaurants matching "{search}". Try searching for something else or reset filters.
+                        </p>
+                        {(search || sortBy !== 'avg_rating' || sortOrder !== 'desc') && (
+                          <button
+                            onClick={() => {
+                              setSearch('')
+                              setSortBy('avg_rating')
+                              setSortOrder('desc')
+                              setPage(1)
+                            }}
+                            className="mt-2 px-4 py-2 bg-[#E8401C] text-white text-xs font-semibold rounded-lg hover:bg-[#c7340f] transition-colors shadow-sm"
+                          >
+                            Reset Filters
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  restaurants.map(r => (
+                    <tr key={r.id} className={`${rowHover} transition-colors`}>
+                      <td className={`px-[14px] py-[11px] font-medium max-w-[180px] truncate ${lightMode ? 'text-gray-900' : 'text-white/90'}`}>
+                        {r.name}
+                      </td>
+                      <td className="px-[14px] py-[11px]">
+                        <span className={`font-bold ${r.avg_rating >= 4.5 ? 'text-green-500' : r.avg_rating >= 4 ? 'text-amber-500' : 'text-red-500'}`}>
+                          ★ {r.avg_rating?.toFixed(1)}
+                        </span>
+                      </td>
+                      <td className="px-[14px] py-[11px]">
+                        <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold whitespace-nowrap ${CAT_BG[r.category]} ${CAT_COLOR[r.category]}`}>
+                          {r.category}
+                        </span>
+                      </td>
+                      <td className={`px-[14px] py-[11px] ${mutedText2}`}>{r.city || '—'}</td>
+                      <td className={`px-[14px] py-[11px] ${mutedText2}`}>{r.area || '—'}</td>
+                      <td className={`px-[14px] py-[11px] ${mutedText2}`}>{r.cost?.toLocaleString()}</td>
+                      <td className={`px-[14px] py-[11px] ${lightMode ? 'text-gray-400' : 'text-[#9cadc5]'} max-w-[160px] truncate`}>{r.cuisines}</td>
+                      <td className="px-[14px] py-[11px] whitespace-nowrap space-x-2">
+                        <button 
+                          onClick={() => openEdit(r)}
+                          className={`px-2.5 py-1 rounded-md text-xs font-medium hover:opacity-80 transition-opacity ${
+                            lightMode
+                              ? 'bg-blue-50 text-blue-700 border-blue-200'
+                              : 'bg-[#0b2140] text-[#93c5fd] border-blue-900/40'
+                          }`}
+                        >
+                          Edit
+                        </button>
+                        <button 
+                          onClick={() => handleDelete(r)}
+                          className={`px-2.5 py-1 rounded-md text-xs font-medium hover:opacity-80 transition-opacity ${
+                            lightMode
+                              ? 'bg-red-50 text-red-600 border-red-200'
+                              : 'bg-[#3b0b0b] text-[#fca5a5] border-red-900/40'
+                          }`}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -246,17 +413,32 @@ export default function AdminManage() {
 
             <div className="grid grid-cols-2 gap-3.5 mb-3.5">
               <div className="flex flex-col">
-                <label className={`text-xs font-semibold mb-1 ${lightMode ? 'text-gray-500' : 'text-[#9cadc5]'}`}>Location</label>
+                <label className={`text-xs font-semibold mb-1 ${lightMode ? 'text-gray-500' : 'text-[#9cadc5]'}`}>City</label>
                 <select 
                   className={`border rounded-lg px-3 py-2 text-sm outline-none ${
                     lightMode ? 'border-gray-200 bg-white' : 'border-[#223650] bg-[#07111f] text-white'
                   }`}
-                  value={form.location || ''} 
-                  onChange={e => setForm(f => ({...f, location: e.target.value}))}
+                  value={form.city || ''} 
+                  onChange={e => setForm(f => ({...f, city: e.target.value}))}
                 >
-                  {LOCATIONS.map(l => <option key={l} value={l}>{l}</option>)}
+                  {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
+              <div className="flex flex-col">
+                <label className={`text-xs font-semibold mb-1 ${lightMode ? 'text-gray-500' : 'text-[#9cadc5]'}`}>Area</label>
+                <select 
+                  className={`border rounded-lg px-3 py-2 text-sm outline-none ${
+                    lightMode ? 'border-gray-200 bg-white' : 'border-[#223650] bg-[#07111f] text-white'
+                  }`}
+                  value={form.area || ''} 
+                  onChange={e => setForm(f => ({...f, area: e.target.value}))}
+                >
+                  {AREAS.map(a => <option key={a} value={a}>{a}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3.5 mb-3.5">
               <div className="flex flex-col">
                 <label className={`text-xs font-semibold mb-1 ${lightMode ? 'text-gray-500' : 'text-[#9cadc5]'}`}>Category</label>
                 <select 

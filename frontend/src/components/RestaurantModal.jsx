@@ -107,7 +107,7 @@ export default function RestaurantModal({ id, onClose }) {
           {/* Details Section */}
           <section className="mb-5">
             <h3 className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2.5">Details</h3>
-            <div className="flex gap-2 items-start text-sm mb-1.5 text-gray-700"><span>📍</span><span>{r.location}, Hyderabad</span></div>
+            <div className="flex gap-2 items-start text-sm mb-1.5 text-gray-700"><span>📍</span><span>{[r.area, r.city].filter(Boolean).join(', ') || '—'}</span></div>
             {r.timings && <div className="flex gap-2 items-start text-sm mb-1.5 text-gray-700"><span>🕐</span><span>{r.timings}</span></div>}
             <div className="flex gap-2 items-start text-sm mb-1.5 text-gray-700"><span>🏷️</span><span>{r.category}</span></div>
           </section>

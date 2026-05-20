@@ -10,9 +10,16 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const stored = localStorage.getItem('zl_user')
     const token  = localStorage.getItem('zl_token')
-    if (stored && token) {
-      setUser(JSON.parse(stored))
-      api.setToken(token)
+    if (stored && token && stored !== 'undefined') {
+      try {
+        setUser(JSON.parse(stored))
+        api.setToken(token)
+      } catch (e) {
+        localStorage.removeItem('zl_user')
+        localStorage.removeItem('zl_token')
+      }
+    } else if (stored === 'undefined') {
+      localStorage.removeItem('zl_user')
     }
     setLoading(false)
   }, [])
@@ -28,6 +35,11 @@ export function AuthProvider({ children }) {
 
   const signup = async (name, email, password) => {
     const data = await api.post('/auth/signup', { name, email, password, role: 'user' })
+    return data
+  }
+
+  const verifyOtp = async (email, otp) => {
+    const data = await api.post('/auth/verify-signup-otp', { email, otp })
     api.setToken(data.access_token)
     localStorage.setItem('zl_token', data.access_token)
     localStorage.setItem('zl_user', JSON.stringify(data.user))
@@ -42,8 +54,13 @@ export function AuthProvider({ children }) {
     setUser(null)
   }
 
+  const resetPassword = async (email, newPassword) => {
+    const data = await api.post('/auth/reset-password', { email, new_password: newPassword })
+    return data
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, signup, logout, resetPassword, verifyOtp }}>
       {children}
     </AuthContext.Provider>
   )

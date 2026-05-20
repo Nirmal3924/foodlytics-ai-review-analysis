@@ -61,7 +61,14 @@ async def upload_restaurants(
     if not file.filename.endswith(".csv"):
         raise HTTPException(status_code=400, detail="Only CSV files are supported")
     content = await file.read()
-    inserted, skipped = ingest_restaurant_csv(io.StringIO(content.decode("utf-8")), db)
+    try:
+        decoded_content = content.decode("utf-8")
+    except UnicodeDecodeError:
+        decoded_content = content.decode("cp1252")
+    try:
+        inserted, skipped = ingest_restaurant_csv(io.StringIO(decoded_content), db)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Ingestion error: {str(e)}")
     return {"message": f"Upload complete", "inserted": inserted, "skipped": skipped}
 
 
@@ -74,7 +81,14 @@ async def upload_reviews(
     if not file.filename.endswith(".csv"):
         raise HTTPException(status_code=400, detail="Only CSV files are supported")
     content = await file.read()
-    inserted, skipped = ingest_reviews_csv(io.StringIO(content.decode("utf-8")), db)
+    try:
+        decoded_content = content.decode("utf-8")
+    except UnicodeDecodeError:
+        decoded_content = content.decode("cp1252")
+    try:
+        inserted, skipped = ingest_reviews_csv(io.StringIO(decoded_content), db)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Ingestion error: {str(e)}")
     return {"message": f"Upload complete", "inserted": inserted, "skipped": skipped}
 
 
@@ -84,7 +98,7 @@ def create_restaurant(
     db: Session = Depends(get_db),
     _: User = Depends(require_admin)
 ):
-    r = Restaurant(**data.dict())
+    r = Restaurant(**data.model_dump())
     db.add(r)
     db.commit()
     db.refresh(r)
@@ -101,7 +115,7 @@ def update_restaurant(
     r = db.query(Restaurant).filter(Restaurant.id == restaurant_id).first()
     if not r:
         raise HTTPException(status_code=404, detail="Restaurant not found")
-    for field, value in data.dict(exclude_unset=True).items():
+    for field, value in data.model_dump(exclude_unset=True).items():
         setattr(r, field, value)
     db.commit()
     db.refresh(r)
@@ -126,16 +140,39 @@ def delete_restaurant(
 def admin_list_restaurants(
     page: int = 1,
     per_page: int = 20,
+    search: str = None,
+    sort_by: str = "avg_rating",
+    sort_order: str = "desc",
     db: Session = Depends(get_db),
     _: User = Depends(require_admin)
 ):
-    return (
-        db.query(Restaurant)
-        .order_by(Restaurant.avg_rating.desc())
-        .offset((page - 1) * per_page)
-        .limit(per_page)
-        .all()
-    )
+    query = db.query(Restaurant)
+    if search:
+        s = f"%{search}%"
+        query = query.filter(
+            Restaurant.name.ilike(s) |
+            Restaurant.city.ilike(s) |
+            Restaurant.area.ilike(s) |
+            Restaurant.category.ilike(s) |
+            Restaurant.cuisines.ilike(s)
+        )
+
+    valid_sort_cols = {
+        "name": Restaurant.name,
+        "avg_rating": Restaurant.avg_rating,
+        "cost": Restaurant.cost,
+        "category": Restaurant.category,
+        "area": Restaurant.area,
+        "city": Restaurant.city,
+        "id": Restaurant.id,
+    }
+    sort_col = valid_sort_cols.get(sort_by, Restaurant.avg_rating)
+    if sort_order.lower() == "asc":
+        query = query.order_by(sort_col.asc())
+    else:
+        query = query.order_by(sort_col.desc())
+
+    return query.offset((page - 1) * per_page).limit(per_page).all()
 
 
 @router.get("/users")
