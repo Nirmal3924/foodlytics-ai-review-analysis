@@ -1,9 +1,17 @@
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv()
+BASE_DIR = Path(__file__).resolve().parents[2]
+load_dotenv(BASE_DIR / ".env")
+load_dotenv(BASE_DIR / "backend" / ".env")
 
 class Settings:
+    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
+    _mail_password = os.getenv("MAIL_PASSWORD") or os.getenv("EMAIL_PASS", "")
+    if os.getenv("MAIL_SERVER", "smtp.gmail.com") == "smtp.gmail.com":
+        _mail_password = _mail_password.replace(" ", "")
+
     # ── Database ──
     DATABASE_URL: str = os.getenv(
         "DATABASE_URL",
@@ -16,9 +24,9 @@ class Settings:
     ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))
 
     # ── Mail Configuration ──
-    MAIL_USERNAME: str = os.getenv("MAIL_USERNAME", "")
-    MAIL_PASSWORD: str = os.getenv("MAIL_PASSWORD", "")
-    MAIL_FROM: str = os.getenv("MAIL_FROM", "")
+    MAIL_USERNAME: str = os.getenv("MAIL_USERNAME") or os.getenv("EMAIL_USER", "")
+    MAIL_PASSWORD: str = _mail_password
+    MAIL_FROM: str = os.getenv("MAIL_FROM") or os.getenv("EMAIL_FROM", "")
     MAIL_PORT: int = int(os.getenv("MAIL_PORT", "587"))
     MAIL_SERVER: str = os.getenv("MAIL_SERVER", "smtp.gmail.com")
     MAIL_FROM_NAME: str = os.getenv("MAIL_FROM_NAME", "Foodlytics")

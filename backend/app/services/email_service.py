@@ -1,4 +1,3 @@
-import os
 import logging
 from pathlib import Path
 from fastapi_mail import ConnectionConfig, FastMail, MessageSchema
@@ -41,8 +40,8 @@ class EmailService:
                 "OTPs will be logged directly to the server terminal."
             )
 
-    async def _send_html_email(self, email: str, subject: str, html_content: str, otp_code: str, fallback_msg: str):
-        """Helper to send HTML email with try-except fallback to console logging."""
+    async def _send_html_email(self, email: str, subject: str, html_content: str, otp_code: str, fallback_msg: str) -> bool:
+        """Send an email and return True only when SMTP delivery succeeds."""
         if self.is_smtp_configured and self.fm:
             try:
                 message = MessageSchema(
@@ -67,7 +66,7 @@ class EmailService:
         print(f"Message:   {fallback_msg}")
         print("=" * 60)
         logger.info(f"[CONSOLE FALLBACK] OTP Code is: {otp_code} (Sent to {email})")
-        return True
+        return False
 
     async def send_signup_otp(self, email: str, name: str, otp: str):
         """Send signup OTP verification email."""

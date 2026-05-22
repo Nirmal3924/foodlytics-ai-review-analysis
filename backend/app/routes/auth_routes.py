@@ -16,6 +16,18 @@ from app.services.email_service import email_service
 
 router = APIRouter()
 
+def build_otp_response(message: str, email: str, sent_by_email: bool):
+    if not sent_by_email:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="OTP could not be sent by email. Please check SMTP configuration and try again."
+        )
+    return {
+        "message": message,
+        "email": email,
+        "delivery": "email",
+    }
+
 # ── 1. USER REGISTRATION FLOW ─────────────────────────────
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 async def register(data: UserCreate, db: Session = Depends(get_db)):
@@ -58,16 +70,17 @@ async def register(data: UserCreate, db: Session = Depends(get_db)):
     )
 
     # Send OTP email automatically
-    await email_service.send_signup_otp(
+    sent_by_email = await email_service.send_signup_otp(
         email=new_user.email, 
         name=new_user.name, 
         otp=otp
     )
 
-    return {
-        "message": "Registration successful! A secure 6-digit verification code has been sent to your email.",
-        "email": new_user.email
-    }
+    return build_otp_response(
+        message="Registration successful! A secure 6-digit verification code has been sent to your email.",
+        email=new_user.email,
+        sent_by_email=sent_by_email,
+    )
 
 
 # Backwards-compatible alias for frontend calling /signup
@@ -75,6 +88,40 @@ async def register(data: UserCreate, db: Session = Depends(get_db)):
 async def signup(data: UserCreate, db: Session = Depends(get_db)):
     """Legacy endpoint mapping to the new secure registration flow."""
     return await register(data, db)
+
+
+@router.post("/resend-signup-otp")
+async def resend_signup_otp(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    """Generate and send a fresh signup OTP for an existing unverified account."""
+    user = db.query(User).filter(User.email == data.email).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found."
+        )
+    if user.is_verified:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Account is already verified. Please sign in."
+        )
+
+    otp = OTPService.create_otp_verification(
+        db=db,
+        email=user.email,
+        otp_type="signup",
+        user_id=user.id
+    )
+    sent_by_email = await email_service.send_signup_otp(
+        email=user.email,
+        name=user.name,
+        otp=otp
+    )
+
+    return build_otp_response(
+        message="A new secure 6-digit verification code has been sent to your email.",
+        email=user.email,
+        sent_by_email=sent_by_email,
+    )
 
 
 # ── 2. VERIFY SIGNUP OTP ──────────────────────────────────
@@ -164,11 +211,13 @@ async def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get
     )
 
     # Send reset OTP email
-    await email_service.send_reset_password_otp(email=user.email, otp=otp)
+    sent_by_email = await email_service.send_reset_password_otp(email=user.email, otp=otp)
 
-    return {
-        "message": "A secure 6-digit password reset verification code has been sent to your email."
-    }
+    return build_otp_response(
+        message="A secure 6-digit password reset verification code has been sent to your email.",
+        email=user.email,
+        sent_by_email=sent_by_email,
+    )
 
 
 # ── 5. VERIFY FORGOT PASSWORD OTP ─────────────────────────
