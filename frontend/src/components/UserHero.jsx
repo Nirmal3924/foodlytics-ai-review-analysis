@@ -65,6 +65,7 @@ export default function UserHero({
     }
   ]
   const [currentIndex, setCurrentIndex] = useState(0)
+  const [isBudgetOpen, setIsBudgetOpen] = useState(false)
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -80,9 +81,8 @@ export default function UserHero({
           {slides.map((slide, index) => (
             <div
               key={slide.img}
-              className={`absolute inset-y-0 right-0 w-full md:w-[60%] lg:w-[50%] pointer-events-none transition-opacity duration-1000 ease-in-out ${
-                index === currentIndex ? 'opacity-80 md:opacity-100' : 'opacity-0'
-              }`}
+              className={`absolute inset-y-0 right-0 w-full md:w-[60%] lg:w-[50%] pointer-events-none transition-opacity duration-1000 ease-in-out ${index === currentIndex ? 'opacity-80 md:opacity-100' : 'opacity-0'
+                }`}
               style={{
                 backgroundImage: `url('${slide.img}')`,
                 backgroundSize: 'cover',
@@ -108,11 +108,10 @@ export default function UserHero({
 
             {/* Actual animated text */}
             {slides.map((slide, index) => (
-              <div 
-                key={index} 
-                className={`absolute left-6 md:left-8 top-1/2 -translate-y-1/2 max-w-2xl p-4 md:p-6 transition-opacity duration-1000 ease-in-out ${
-                  index === currentIndex ? 'opacity-100' : 'opacity-0 pointer-events-none'
-                }`}
+              <div
+                key={index}
+                className={`absolute left-6 md:left-8 top-1/2 -translate-y-1/2 max-w-2xl p-4 md:p-6 transition-opacity duration-1000 ease-in-out ${index === currentIndex ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                  }`}
               >
                 <h1 className="text-3xl md:text-5xl font-black text-white leading-tight">
                   Hello, {firstName}! <span className="inline-block">👋</span>
@@ -177,12 +176,41 @@ export default function UserHero({
               icon={<FiSliders className="text-sm" />}
               onClick={onClearFilters}
             />
-            <Pill
-              label="Budget"
-              active={price === 'budget'}
-              icon={<FiChevronDown className="text-sm" />}
-              onClick={() => onPriceSelect('budget')}
-            />
+            <div className="relative">
+              <Pill
+                label={price && price !== 'budget' ? `Up to ₹${price}` : "Budget"}
+                active={!!price}
+                icon={<FiChevronDown className={`text-sm transition-transform ${isBudgetOpen ? 'rotate-180' : ''}`} />}
+                onClick={() => setIsBudgetOpen(!isBudgetOpen)}
+              />
+              {isBudgetOpen && (
+                <div className="absolute top-full left-0 mt-2 w-36 rounded-xl bg-white dark:bg-gray-800 shadow-xl border border-gray-100 dark:border-gray-700 py-1.5 z-50">
+                  {['200', '500', '800', '1200', '2000'].map(b => (
+                    <button
+                      key={b}
+                      className="w-full text-left px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-orange-50 dark:hover:bg-gray-700 hover:text-orange-600 transition-colors"
+                      onClick={() => {
+                        onPriceSelect(b);
+                        setIsBudgetOpen(false);
+                      }}
+                    >
+                      Up to ₹{b}
+                    </button>
+                  ))}
+                  {price && (
+                    <button
+                      className="w-full text-left px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors border-t border-gray-100 dark:border-gray-700 mt-1 pt-2"
+                      onClick={() => {
+                        onPriceSelect('');
+                        setIsBudgetOpen(false);
+                      }}
+                    >
+                      Clear Budget
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
             <Pill
               label="Rating 4+"
               active={rating === '4.0' || rating === '4.5'}
@@ -190,21 +218,10 @@ export default function UserHero({
               onClick={() => onRatingSelect('4.0')}
             />
             <Pill
-              label="Pure Veg"
-              active={isVeg}
-              icon={<span className="text-green-600">●</span>}
-              onClick={onVegToggle}
-            />
-            <Pill
               label="Open Now"
               active={isOpenNow}
               icon={<FiClock className="text-sm" />}
               onClick={onOpenNowToggle}
-            />
-            <Pill
-              label="Outdoor Seating"
-              active={outdoorSeating}
-              onClick={onOutdoorSeatingToggle}
             />
           </div>
         </div>

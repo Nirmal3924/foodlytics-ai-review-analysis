@@ -58,6 +58,7 @@ export default function AdminSidebar({ tabs, activeTab, onTabChange, user, onLog
             <button
               key={tab.key}
               type="button"
+              onClick={() => onTabChange(tab.key)}
               className={`flex h-[40px] w-full items-center rounded-[9px] text-left text-[13px] font-semibold transition-all duration-200 hover:-translate-y-[1px] active:scale-[0.98] ${collapsed && !isMobileOpen ? 'justify-center px-0 gap-0' : 'px-2.5 gap-2.5'} ${
                 isActive
                   ? 'bg-[#fff1eb] text-[#ff4a13] shadow-[inset_0_0_0_1px_rgba(255,74,19,0.04)]'

@@ -90,36 +90,27 @@ def get_restaurants(
 
 
 @router.get("/top", response_model=list[RestaurantOut])
-def get_top_restaurants(limit: int = Query(8, le=20), db: Session = Depends(get_db)):
-    return (
-        db.query(Restaurant)
-        .filter(Restaurant.avg_rating >= 4.5)
-        .order_by(Restaurant.avg_rating.desc())
-        .limit(limit)
-        .all()
-    )
+def get_top_restaurants(city: Optional[str] = Query(None), limit: int = Query(8, le=20), db: Session = Depends(get_db)):
+    query = db.query(Restaurant).filter(Restaurant.avg_rating >= 4.5)
+    if city:
+        query = query.filter(Restaurant.city == city)
+    return query.order_by(Restaurant.avg_rating.desc()).limit(limit).all()
 
 
 @router.get("/hidden-gems", response_model=list[RestaurantOut])
-def get_hidden_gems(limit: int = Query(8, le=20), db: Session = Depends(get_db)):
-    return (
-        db.query(Restaurant)
-        .filter(Restaurant.category == "Hidden Gem")
-        .order_by(Restaurant.avg_rating.desc())
-        .limit(limit)
-        .all()
-    )
+def get_hidden_gems(city: Optional[str] = Query(None), limit: int = Query(8, le=20), db: Session = Depends(get_db)):
+    query = db.query(Restaurant).filter(Restaurant.category == "Hidden Gem")
+    if city:
+        query = query.filter(Restaurant.city == city)
+    return query.order_by(Restaurant.avg_rating.desc()).limit(limit).all()
 
 
 @router.get("/overrated", response_model=list[RestaurantOut])
-def get_overrated(limit: int = Query(8, le=20), db: Session = Depends(get_db)):
-    return (
-        db.query(Restaurant)
-        .filter(Restaurant.avg_rating < 3.2)
-        .order_by(Restaurant.avg_rating.asc())
-        .limit(limit)
-        .all()
-    )
+def get_overrated(city: Optional[str] = Query(None), limit: int = Query(8, le=20), db: Session = Depends(get_db)):
+    query = db.query(Restaurant).filter(Restaurant.avg_rating < 3.2)
+    if city:
+        query = query.filter(Restaurant.city == city)
+    return query.order_by(Restaurant.avg_rating.asc()).limit(limit).all()
 
 
 @router.get("/areas", response_model=list[str])

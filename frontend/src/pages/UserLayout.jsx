@@ -41,20 +41,27 @@ export default function UserLayout() {
 
   useEffect(() => {
     Promise.all([
-      restaurantService.getTop(),
-      restaurantService.getHiddenGems(),
-      restaurantService.getOverrated(),
       restaurantService.getAreas(),
       restaurantService.getCities(),
-    ]).then(([top, gems, over, areaList, cityList]) => {
+    ]).then(([areaList, cityList]) => {
+      setAreas(areaList)
+      if (cityList?.length) setCities(cityList)
+    }).catch(() => { })
+  }, [])
+
+  useEffect(() => {
+    setLoading(true)
+    Promise.all([
+      restaurantService.getTop(city),
+      restaurantService.getHiddenGems(city),
+      restaurantService.getOverrated(city),
+    ]).then(([top, gems, over]) => {
       setTopRated(uniqueById(top))
       setHiddenGems(uniqueById(gems))
       setOverrated(uniqueById(over))
-      setAreas(areaList)
-      if (cityList?.length) setCities(cityList)
       setLoading(false)
     }).catch(() => setLoading(false))
-  }, [])
+  }, [city])
 
   useEffect(() => {
     const hasFilter = search || area || rating || category || price || isOpenNow || isVeg || outdoorSeating || (selectedCuisine !== 'All Categories')
@@ -105,7 +112,8 @@ export default function UserLayout() {
 
     try {
       const perPage = 50
-      const firstPage = await restaurantService.getAll({ page: 1, per_page: perPage })
+      const params = city ? { city, page: 1, per_page: perPage } : { page: 1, per_page: perPage }
+      const firstPage = await restaurantService.getAll(params)
       const totalPages = Math.ceil((firstPage.total || firstPage.restaurants.length) / perPage)
 
       if (totalPages <= 1) {
@@ -114,9 +122,10 @@ export default function UserLayout() {
       }
 
       const remainingPages = await Promise.all(
-        Array.from({ length: totalPages - 1 }, (_, index) =>
-          restaurantService.getAll({ page: index + 2, per_page: perPage })
-        )
+        Array.from({ length: totalPages - 1 }, (_, index) => {
+          const nextParams = city ? { city, page: index + 2, per_page: perPage } : { page: index + 2, per_page: perPage }
+          return restaurantService.getAll(nextParams)
+        })
       )
 
       setSearchResults(uniqueById([

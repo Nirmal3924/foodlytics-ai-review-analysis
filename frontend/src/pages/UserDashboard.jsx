@@ -1,6 +1,6 @@
 import { useOutletContext } from 'react-router-dom'
-import { FiAward, FiTarget, FiAlertTriangle, FiSearch } from 'react-icons/fi'
-import { FaBrain } from 'react-icons/fa'
+import { FiAward, FiTarget, FiTrendingDown, FiSearch } from 'react-icons/fi'
+import { FaBrain, FaGem } from 'react-icons/fa'
 import DashboardSection from '../components/DashboardSection'
 
 export default function UserDashboard() {
@@ -21,9 +21,8 @@ export default function UserDashboard() {
   return (
     <div className="space-y-12 animate-in fade-in duration-500">
       <DashboardSection
-        title="AI Picks For You"
-        icon={<FaBrain className="text-orange-500" />}
-        theme="picks"
+        title="Top rated"
+        icon={<FiAward className="text-orange-500" />}
         restaurants={topRated}
         onSelect={(id) => navigate(`/restaurant/${id}`)}
         badge="Best Choice"
@@ -32,8 +31,7 @@ export default function UserDashboard() {
       />
       <DashboardSection
         title="Hidden Gems"
-        icon={<FiTarget className="text-emerald-500" />}
-        theme="gems"
+        icon={<FaGem className="text-emerald-500" />}
         restaurants={hiddenGems}
         onSelect={(id) => navigate(`/restaurant/${id}`)}
         badge="High Sentiment"
@@ -42,8 +40,7 @@ export default function UserDashboard() {
       />
       <DashboardSection
         title="Proceed with Caution"
-        icon={<FiAlertTriangle className="text-amber-500" />}
-        theme="caution"
+        icon={<FiTrendingDown className="text-amber-500" />}
         restaurants={overrated}
         onSelect={(id) => navigate(`/restaurant/${id}`)}
         badge="Mixed Reviews"

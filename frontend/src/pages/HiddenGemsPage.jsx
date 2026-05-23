@@ -21,8 +21,7 @@ export default function HiddenGemsPage() {
     <div className="space-y-12 animate-in fade-in duration-500">
       <DashboardSection
         title="Hidden Gems"
-        icon={<FiTarget className="text-emerald-500" />}
-        theme="gems"
+        icon={<FaGem className="text-emerald-500" />}
         restaurants={hiddenGems}
         onSelect={(id) => navigate(`/restaurant/${id}`)}
         badge="High Sentiment"

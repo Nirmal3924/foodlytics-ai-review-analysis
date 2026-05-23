@@ -1,5 +1,5 @@
 import { useOutletContext } from 'react-router-dom'
-import { FiAlertTriangle, FiSearch } from 'react-icons/fi'
+import { FiTrendingDown, FiSearch } from 'react-icons/fi'
 import DashboardSection from '../components/DashboardSection'
 
 export default function OverratedPage() {
@@ -21,7 +21,7 @@ export default function OverratedPage() {
     <div className="space-y-12 animate-in fade-in duration-500">
       <DashboardSection
         title="Proceed with Caution"
-        icon={<FiAlertTriangle className="text-amber-500" />}
+        icon={<FiTrendingDown className="text-amber-500" />}
         theme="caution"
         restaurants={overrated}
         onSelect={(id) => navigate(`/restaurant/${id}`)}

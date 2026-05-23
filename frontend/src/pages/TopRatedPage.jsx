@@ -20,9 +20,8 @@ export default function TopRatedPage() {
   return (
     <div className="space-y-12 animate-in fade-in duration-500">
       <DashboardSection
-        title="AI Picks For You (Top Rated)"
+        title="Top Rated"
         icon={<FiAward className="text-orange-500" />}
-        theme="picks"
         restaurants={topRated}
         onSelect={(id) => navigate(`/restaurant/${id}`)}
         badge="Best Choice"
