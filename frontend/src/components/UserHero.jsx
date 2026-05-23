@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { FiSearch, FiSliders, FiChevronDown, FiClock } from 'react-icons/fi'
 
 function Pill({ label, active = false, onClick, icon = null }) {
@@ -5,8 +6,8 @@ function Pill({ label, active = false, onClick, icon = null }) {
     'inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 border whitespace-nowrap cursor-pointer select-none'
 
   const className = active
-    ? `${common} bg-orange-50 border-orange-300 text-orange-700 shadow-[0_2px_10px_rgba(249,115,22,0.12)]`
-    : `${common} bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm`
+    ? `${common} bg-orange-50 dark:bg-orange-900/30 border-orange-300 dark:border-orange-500/50 text-orange-700 dark:text-orange-500 shadow-[0_2px_10px_rgba(249,115,22,0.12)]`
+    : `${common} bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm`
 
   return (
     <button
@@ -43,42 +44,99 @@ export default function UserHero({
   outdoorSeating,
   onOutdoorSeatingToggle
 }) {
+  const slides = [
+    {
+      img: '/chicken_biryani_hero.png',
+      bgColor: 'bg-[#1e1511]', // Dark warm background matching the cinematic image
+      title: <>Discover {city}'s smartest food picks powered by <span className="text-orange-500">AI.</span></>,
+      desc: 'Real reviews. Smart analysis. Better choices.'
+    },
+    {
+      img: '/gourmet_pizza_hero.png',
+      bgColor: 'bg-[#18110b]', // Rustic dark oven warmth
+      title: <>Find the best <span className="text-orange-500">hidden gems</span> near you instantly.</>,
+      desc: 'Explore top-rated restaurants with precision.'
+    },
+    {
+      img: '/premium_steak_hero.png',
+      bgColor: 'bg-[#111111]', // Moody sophisticated dining
+      title: <>Make data-driven <span className="text-green-500">dining decisions</span> easily.</>,
+      desc: 'Analyze sentiment from thousands of real reviews.'
+    }
+  ]
+  const [currentIndex, setCurrentIndex] = useState(0)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % slides.length)
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [slides.length])
+
   return (
     <header className="pb-6 px-6 md:px-12 max-w-7xl mx-auto pt-8 select-none">
       <div className="space-y-5">
-        <div className="relative overflow-hidden rounded-[28px] border border-orange-100 min-h-[280px] bg-[#fff8f2]">
-          <div
-            className="absolute inset-y-0 right-0 hidden w-[48%] md:block"
-            style={{
-              backgroundImage: "url('/navbar.png')",
-              backgroundSize: 'cover',
-              backgroundPosition: 'center right',
-            }}
-          />
-          <div className="relative z-10 flex min-h-[280px] items-center p-6 md:p-8">
-            <div className="max-w-2xl p-4 md:p-6">
-              <h1 className="text-3xl md:text-5xl font-black text-gray-900 leading-tight">
+        <div className={`relative overflow-hidden rounded-[28px] border border-orange-100 min-h-[280px] transition-colors duration-1000 ${slides[currentIndex].bgColor} dark:bg-gray-800 dark:border-gray-700`}>
+          {slides.map((slide, index) => (
+            <div
+              key={slide.img}
+              className={`absolute inset-y-0 right-0 w-full md:w-[60%] lg:w-[50%] pointer-events-none transition-opacity duration-1000 ease-in-out ${
+                index === currentIndex ? 'opacity-80 md:opacity-100' : 'opacity-0'
+              }`}
+              style={{
+                backgroundImage: `url('${slide.img}')`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center right',
+                WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 50%)',
+                maskImage: 'linear-gradient(to right, transparent 0%, black 50%)'
+              }}
+            />
+          ))}
+          <div className="relative z-10 flex min-h-[280px] items-center p-6 md:p-8 w-full">
+            {/* Hidden dummy element to keep layout height stable */}
+            <div className="max-w-2xl p-4 md:p-6 invisible pointer-events-none">
+              <h1 className="text-3xl md:text-5xl font-black leading-tight text-white">
                 Hello, {firstName}! <span className="inline-block">👋</span>
               </h1>
-              <div className="mt-2 text-2xl md:text-5xl font-black text-gray-900 leading-tight">
-                Discover {city}'s smartest food picks powered by <span className="text-orange-500">AI.</span>
+              <div className="mt-2 text-2xl md:text-5xl font-black leading-tight text-white">
+                Discover {city}'s smartest food picks powered by AI.
               </div>
-              <p className="mt-4 text-sm md:text-lg text-gray-500 leading-relaxed font-medium">
+              <p className="mt-4 text-sm md:text-lg leading-relaxed font-medium text-gray-300">
                 Real reviews. Smart analysis. Better choices.
               </p>
             </div>
+
+            {/* Actual animated text */}
+            {slides.map((slide, index) => (
+              <div 
+                key={index} 
+                className={`absolute left-6 md:left-8 top-1/2 -translate-y-1/2 max-w-2xl p-4 md:p-6 transition-opacity duration-1000 ease-in-out ${
+                  index === currentIndex ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                }`}
+              >
+                <h1 className="text-3xl md:text-5xl font-black text-white leading-tight">
+                  Hello, {firstName}! <span className="inline-block">👋</span>
+                </h1>
+                <div className="mt-2 text-2xl md:text-5xl font-black text-white leading-tight">
+                  {slide.title}
+                </div>
+                <p className="mt-4 text-sm md:text-lg text-gray-200 leading-relaxed font-medium">
+                  {slide.desc}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
 
         <div className="space-y-3">
           <div className="relative w-full max-w-5xl flex flex-col md:flex-row items-center gap-4">
-            <div className="w-full flex-1 flex items-center gap-2 rounded-2xl border border-gray-200 bg-white p-1.5 shadow-sm">
+            <div className="w-full flex-1 flex items-center gap-2 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-1.5 shadow-sm transition-colors">
               <div className="relative flex-1">
                 <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
                   type="text"
                   placeholder="Search for restaurants, cuisines or dishes..."
-                  className="w-full rounded-xl bg-white py-3 pl-10 pr-4 text-sm text-gray-700 outline-none font-medium"
+                  className="w-full rounded-xl bg-white dark:bg-gray-800 py-3 pl-10 pr-4 text-sm text-gray-700 dark:text-gray-200 outline-none font-medium transition-colors"
                   value={search}
                   onChange={(e) => onSearchChange(e.target.value)}
                 />

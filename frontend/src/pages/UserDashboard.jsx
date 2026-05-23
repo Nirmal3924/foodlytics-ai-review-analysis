@@ -1,5 +1,6 @@
 import { useOutletContext } from 'react-router-dom'
 import { FiAward, FiTarget, FiAlertTriangle, FiSearch } from 'react-icons/fi'
+import { FaBrain } from 'react-icons/fa'
 import DashboardSection from '../components/DashboardSection'
 
 export default function UserDashboard() {
@@ -21,7 +22,7 @@ export default function UserDashboard() {
     <div className="space-y-12 animate-in fade-in duration-500">
       <DashboardSection
         title="AI Picks For You"
-        icon={<FiAward className="text-orange-500" />}
+        icon={<FaBrain className="text-orange-500" />}
         theme="picks"
         restaurants={topRated}
         onSelect={(id) => navigate(`/restaurant/${id}`)}

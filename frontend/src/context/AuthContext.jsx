@@ -47,6 +47,21 @@ export function AuthProvider({ children }) {
     return data.user
   }
 
+  const resendSignupOtp = async (email) => {
+    const data = await api.post('/auth/resend-signup-otp', { email })
+    return data
+  }
+
+  const requestPasswordResetOtp = async (email) => {
+    const data = await api.post('/auth/forgot-password', { email })
+    return data
+  }
+
+  const verifyResetOtp = async (email, otp) => {
+    const data = await api.post('/auth/verify-reset-otp', { email, otp })
+    return data
+  }
+
   const logout = () => {
     localStorage.removeItem('zl_token')
     localStorage.removeItem('zl_user')
@@ -60,7 +75,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout, resetPassword, verifyOtp }}>
+    <AuthContext.Provider value={{ user, loading, login, signup, logout, resetPassword, verifyOtp, resendSignupOtp, requestPasswordResetOtp, verifyResetOtp }}>
       {children}
     </AuthContext.Provider>
   )

@@ -34,6 +34,8 @@ export default function UserLayout() {
 
   const [city, setCity] = useState('Hyderabad')
   const [selectedCuisine, setSelectedCuisine] = useState('All Categories')
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
 
   const firstName = user?.name?.split(' ')[0] || 'User'
 
@@ -155,13 +157,17 @@ export default function UserLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300">
       <div className="flex">
         {/* Sidebar */}
         <UserSidebar
           hasFilter={hasFilter}
           viewAllRestaurants={viewAllRestaurants}
           onClearFilters={clearFilters}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          isMobileOpen={isMobileSidebarOpen}
+          onMobileClose={() => setIsMobileSidebarOpen(false)}
         />
 
         {/* Main Content */}
@@ -172,6 +178,7 @@ export default function UserLayout() {
             onCityChange={setCity}
             firstName={firstName}
             onLogout={logout}
+            onToggleMobileSidebar={() => setIsMobileSidebarOpen(true)}
           />
 
           <div className="flex-grow">

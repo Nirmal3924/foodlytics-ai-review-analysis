@@ -8,6 +8,7 @@ import {
   FiSettings,
   FiSun,
   FiUploadCloud,
+  FiMenu,
 } from 'react-icons/fi'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -28,6 +29,7 @@ export default function AdminDashboard() {
   const { user, logout } = useAuth()
 
   const [tab, setTab] = useState('dashboard')
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
   const [lightMode, setLightMode] = useState(
     () => localStorage.getItem('zl_theme') !== 'dark'
   )
@@ -54,7 +56,7 @@ export default function AdminDashboard() {
 
   return (
     <div
-      className={`min-h-screen w-[90.909%] origin-top-left scale-110 overflow-x-hidden p-1.5 sm:p-3 transition-colors duration-500 ${
+      className={`min-h-screen w-full lg:w-[90.909%] lg:origin-top-left lg:scale-110 overflow-x-hidden p-1.5 sm:p-3 transition-colors duration-500 ${
         lightMode
           ? 'bg-[#f7f9fc] text-[#12213d]'
           : 'bg-[#07111f] text-[#e8eef9]'
@@ -69,6 +71,8 @@ export default function AdminDashboard() {
           onLogout={logout}
           lightMode={lightMode}
           onLightModeChange={toggleLightMode}
+          isMobileOpen={isMobileSidebarOpen}
+          onMobileClose={() => setIsMobileSidebarOpen(false)}
         />
 
         <main
@@ -81,84 +85,51 @@ export default function AdminDashboard() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className={`mb-5 rounded-2xl border p-4 shadow-[0_12px_30px_rgba(21,34,66,0.05)] lg:hidden ${
+            className={`mb-5 flex items-center justify-between rounded-2xl border p-4 shadow-[0_12px_30px_rgba(21,34,66,0.05)] lg:hidden ${
               lightMode
                 ? 'border-[#e0e7f1] bg-white'
                 : 'border-[#1c2d44] bg-[#0d1b2e]'
             }`}
           >
-            <div className="mb-4 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={() => setIsMobileSidebarOpen(true)}
+                className={`p-2 -ml-2 rounded-xl transition-colors ${lightMode ? 'text-[#102039] hover:bg-[#eef2f7]' : 'text-white hover:bg-[#1a2b45]'}`}
+              >
+                <FiMenu size={22} />
+              </button>
               <div className="text-[24px] font-black tracking-[-0.02em]">
                 <span className="text-[#ff4a13]">Foodly</span>
                 <span className={lightMode ? 'text-[#102039]' : 'text-white'}>
                   tics
                 </span>
               </div>
-
-              <div className="flex items-center gap-2">
-                {/* Theme Button */}
-                <motion.button
-                  whileTap={{ scale: 0.92 }}
-                  whileHover={{ scale: 1.08, rotate: 10 }}
-                  onClick={toggleLightMode}
-                  className={`grid h-10 w-10 place-items-center rounded-xl ${
-                    lightMode
-                      ? 'text-[#52607a] hover:bg-[#eef2f7]'
-                      : 'text-[#d9e5f5] hover:bg-[#1a2b45]'
-                  }`}
-                >
-                  {lightMode ? <FiSun size={19} /> : <FiMoon size={19} />}
-                </motion.button>
-
-                {/* Logout Button */}
-                <motion.button
-                  whileTap={{ scale: 0.92 }}
-                  whileHover={{ scale: 1.08 }}
-                  onClick={logout}
-                  className="grid h-10 w-10 place-items-center rounded-xl text-[#ff3f3f] hover:bg-red-50"
-                >
-                  <FiLogOut size={19} />
-                </motion.button>
-              </div>
             </div>
 
-            {/* Tabs */}
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              {TABS.map((tabItem) => {
-                const Icon = tabItem.icon
-                const isActive = tab === tabItem.key
+            <div className="flex items-center gap-2">
+              {/* Theme Button */}
+              <motion.button
+                whileTap={{ scale: 0.92 }}
+                whileHover={{ scale: 1.08, rotate: 10 }}
+                onClick={toggleLightMode}
+                className={`grid h-10 w-10 place-items-center rounded-xl ${
+                  lightMode
+                    ? 'text-[#52607a] hover:bg-[#eef2f7]'
+                    : 'text-[#d9e5f5] hover:bg-[#1a2b45]'
+                }`}
+              >
+                {lightMode ? <FiSun size={19} /> : <FiMoon size={19} />}
+              </motion.button>
 
-                return (
-                  <motion.button
-                    key={tabItem.key}
-                    whileTap={{ scale: 0.95 }}
-                    whileHover={{ y: -2 }}
-                    onClick={() => setTab(tabItem.key)}
-                    className={`relative flex h-11 items-center justify-center gap-2 rounded-xl text-[12px] font-bold overflow-hidden ${
-                      isActive
-                        ? 'bg-[#fff1eb] text-[#ff4a13]'
-                        : lightMode
-                        ? 'bg-[#f7f9fc] text-[#52607a] hover:bg-[#eef2f7]'
-                        : 'bg-[#132238] text-[#a9b7cc] hover:bg-[#1a2b45]'
-                    }`}
-                  >
-                    {isActive && (
-                      <motion.div
-                        layoutId="activeTab"
-                        className="absolute inset-0 rounded-xl border border-[#ff4a13]"
-                        transition={{
-                          type: 'spring',
-                          stiffness: 300,
-                          damping: 25,
-                        }}
-                      />
-                    )}
-
-                    <Icon size={16} className="relative z-10" />
-                    <span className="relative z-10">{tabItem.label}</span>
-                  </motion.button>
-                )
-              })}
+              {/* Logout Button */}
+              <motion.button
+                whileTap={{ scale: 0.92 }}
+                whileHover={{ scale: 1.08 }}
+                onClick={logout}
+                className="grid h-10 w-10 place-items-center rounded-xl text-[#ff3f3f] hover:bg-red-50"
+              >
+                <FiLogOut size={19} />
+              </motion.button>
             </div>
           </motion.div>
 

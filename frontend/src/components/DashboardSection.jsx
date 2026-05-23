@@ -31,8 +31,8 @@ export default function DashboardSection({ title, icon, restaurants, onSelect, e
 
   if (!visibleRestaurants.length) {
     return emptyMsg ? (
-      <div className="py-20 text-center bg-gray-50 rounded-3xl border border-dashed border-gray-200">
-        <p className="text-gray-400 text-sm">{emptyMsg}</p>
+      <div className="py-20 text-center bg-gray-50 dark:bg-gray-800/50 rounded-3xl border border-dashed border-gray-200 dark:border-gray-700">
+        <p className="text-gray-400 dark:text-gray-500 text-sm">{emptyMsg}</p>
       </div>
     ) : null
   }
@@ -41,20 +41,20 @@ export default function DashboardSection({ title, icon, restaurants, onSelect, e
     <section>
       <div className="mb-6 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className={`flex h-12 w-12 items-center justify-center rounded-2xl text-xl ring-1 ${currentTheme.wrap}`}>
+          <div className={`flex h-12 w-12 items-center justify-center rounded-2xl text-xl ring-1 dark:ring-0 dark:bg-gray-800 ${currentTheme.wrap}`}>
             {icon}
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-lg font-bold text-gray-900">{title}</h2>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">{title}</h2>
               {currentTheme.accentIcon && (
-                <span className={`inline-flex h-7 w-7 items-center justify-center rounded-full border ${currentTheme.badge}`}>
+                <span className={`inline-flex h-7 w-7 items-center justify-center rounded-full border dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 ${currentTheme.badge}`}>
                   {currentTheme.accentIcon}
                 </span>
               )}
             </div>
             {badge && (
-              <span className={`mt-1 inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${currentTheme.badge}`}>
+              <span className={`mt-1 inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 ${currentTheme.badge}`}>
                 {badge}
               </span>
             )}

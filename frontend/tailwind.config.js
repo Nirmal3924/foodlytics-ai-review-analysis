@@ -1,6 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{js,jsx,ts,tsx}'],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
@@ -10,13 +11,6 @@ export default {
           light: '#FFF5F3',
         },
       },
-    },
-  },
-}
-// tailwind.config.js
-module.exports = {
-  theme: {
-    extend: {
       keyframes: {
         slideUp: {
           '0%': { opacity: '0', transform: 'translateY(14px)' },

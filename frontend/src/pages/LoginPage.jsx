@@ -6,7 +6,7 @@ import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 
 export default function LoginPage({ initialTab = 'login' }) {
-  const { login, signup, resetPassword, verifyOtp } = useAuth()
+  const { login, signup, resetPassword, verifyOtp, resendSignupOtp } = useAuth()
   const navigate = useNavigate()
   const [tab, setTab] = useState(initialTab)
   const [name, setName] = useState('')
@@ -27,6 +27,28 @@ export default function LoginPage({ initialTab = 'login' }) {
     setOtp('')
   }, [initialTab])
 
+  const rememberOtpDelivery = (res) => {
+    setSuccess(res?.message || 'Verification code sent to your email.')
+  }
+
+  const handleResendOtp = async () => {
+    if (!email) {
+      setError('Enter your email address first')
+      return
+    }
+    setError('')
+    setSuccess('')
+    setLoading(true)
+    try {
+      const res = await resendSignupOtp(email)
+      rememberOtpDelivery(res)
+    } catch (err) {
+      setError(err.message || 'Could not resend OTP')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
@@ -38,10 +60,9 @@ export default function LoginPage({ initialTab = 'login' }) {
       } else if (tab === 'signup') {
         if (!name.trim()) { setError('Name is required'); setLoading(false); return }
         const res = await signup(name, email, password)
-        setSuccess(res.message || 'Registration successful! Verification code sent to your email.')
+        rememberOtpDelivery(res)
         setTimeout(() => {
           setTab('verify')
-          setSuccess('')
           setError('')
         }, 2500)
       } else if (tab === 'verify') {
@@ -205,6 +226,14 @@ export default function LoginPage({ initialTab = 'login' }) {
                     maxLength={6}
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl outline-none focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 transition-all tracking-[0.25em] text-center font-black placeholder:tracking-normal placeholder:font-normal placeholder:text-gray-300 text-lg"
                   />
+                  <button
+                    type="button"
+                    onClick={handleResendOtp}
+                    disabled={loading}
+                    className="mt-3 text-xs font-semibold text-orange-600 hover:underline disabled:opacity-60"
+                  >
+                    Resend OTP
+                  </button>
                 </div>
               )}
 
